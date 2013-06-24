@@ -46,6 +46,23 @@ describe 'transactions (multi/exec/discard)' do
       @redises.get("test").should == "1"
     end
 
+    it "assigns return values to futures" do
+      @redises.set("counter", 5)
+      @redises.multi do |r|
+        @counter = r.get("counter")
+      end
+      @counter.value.should == "5"
+    end
+
+    it "returns results from commands issued in block" do
+      @redises.set("counter", 5)
+      returns = @redises.multi do |r|
+        r.set("test", 1)
+        r.incr("counter")
+      end
+      returns.should == ["OK", 6]
+    end
+
     it "forbids nesting via blocks" do
       # Have to use only the mock here. redis-rb has a bug in it where
       # nested #multi calls raise NoMethodError because it gets a nil
